@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // ✅ Pull base URL from .env
-const API_BASE_URL = import.meta.env.VITE_API_URL + '/v1'; // e.g., https://mano-setu-api.vercel.app/api/v1
-
+const API_BASE_URL = import.meta.env.VITE_API_URL
 // ✅ Axios instance with CORS & credentials
 const api = axios.create({
   baseURL: API_BASE_URL,
