@@ -68,7 +68,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ✅ Chat Endpoint (Mental Health Assistant)
-app.post('/api/v1/chat', async (req, res) => {
+app.post('/api/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
     let userId = null;
