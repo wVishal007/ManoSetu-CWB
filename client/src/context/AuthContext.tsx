@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { authService } from '../services/auth';
 
 interface User {
@@ -25,7 +31,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -40,25 +46,29 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Init Auth on mount
+  // ✅ Initialize auth on app load
   useEffect(() => {
     const init = async () => {
       const savedToken = localStorage.getItem('token');
-      if (savedToken) {
-        try {
-          const userData = await authService.getCurrentUser(savedToken); // pass token if needed
-          setUser(userData);
-          setToken(savedToken);
-        } catch (err) {
-          console.error('Auth init failed', err);
-          localStorage.removeItem('token');
-          setToken(null);
-          setUser(null);
-        }
+      if (!savedToken) {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      try {
+        const userData = await authService.getCurrentUser(); // token added by axios
+        setUser(userData);
+        setToken(savedToken);
+      } catch (error) {
+        console.error('🔐 Auth init failed:', error);
+        localStorage.removeItem('token');
+        setUser(null);
+        setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     init();
@@ -66,30 +76,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     const res = await authService.login(email, password);
-    setUser(res.user);
-    setToken(res.token);
     localStorage.setItem('token', res.token);
+    setToken(res.token);
+    setUser(res.user);
   };
 
   const register = async (name: string, email: string, password: string) => {
     const res = await authService.register(name, email, password);
-    setUser(res.user);
-    setToken(res.token);
     localStorage.setItem('token', res.token);
+    setToken(res.token);
+    setUser(res.user);
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
     localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
   };
 
   const updateUser = (userData: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...userData } : null);
+    setUser((prev) => (prev ? { ...prev, ...userData } : null));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, token, isLoading, login, register, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
