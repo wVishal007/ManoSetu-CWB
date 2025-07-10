@@ -1,4 +1,3 @@
-// index.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -24,13 +23,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ MongoDB
+// ✅ Connect to MongoDB
 connectDB();
 
 // ✅ Mistral API
 const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 
-// ✅ CORS Whitelist
+// ✅ CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
   'https://manosetu.vercel.app',
@@ -39,7 +38,11 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (
+      !origin || // allow Postman, curl, etc.
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin) // ✅ allow any *.vercel.app preview
+    ) {
       callback(null, true);
     } else {
       callback(new Error('CORS policy violation: Origin not allowed'));
@@ -48,27 +51,23 @@ const corsOptions = {
   credentials: true,
 };
 
-// ✅ Apply CORS globally
+// ✅ Apply CORS globally and for preflight
 app.use(cors(corsOptions));
-
-// ✅ Handle preflight requests for all routes
 app.options('*', cors(corsOptions));
 
-// ✅ Continue with other middlewares
-app.use(express.json());
-
+// ✅ Middleware
 app.use(express.json());
 app.use(morgan('combined'));
 
-// ✅ Static files (frontend)
+// ✅ Serve static frontend (Vite dist folder)
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// ✅ Health check
+// ✅ Health Check Route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'ManoSetu backend is running' });
 });
 
-// ✅ Chat Endpoint
+// ✅ Chat Endpoint (Mental Health Assistant)
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
@@ -108,6 +107,7 @@ app.post('/api/chat', async (req, res) => {
     const reply = chatResponse.choices[0]?.message?.content;
     if (!reply) throw new Error('Empty response from model');
 
+    // Save chat to DB if user is logged in
     if (userId) {
       const { default: Chat } = await import('./models/chat.model.js');
       await Chat.create({ userId, role: 'user', content: message });
@@ -134,11 +134,12 @@ app.use('/api/v1/exercise', exerciseRoutes);
 app.use('/api/v1/forum', forumRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
-// ✅ Fallback route (for SPA frontend)
+// ✅ Fallback for SPA (send index.html)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 ManoSetu backend running on port ${PORT}`);
 });
