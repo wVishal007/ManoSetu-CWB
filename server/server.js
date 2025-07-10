@@ -32,7 +32,7 @@ const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 // ✅ CORS whitelist
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://manosetu-platform.onrender.com',
+  "https://manosetu.vercel.app",
 ];
 
 app.use(cors({
