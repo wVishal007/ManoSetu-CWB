@@ -4,9 +4,10 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true, // ✅ Needed for CORS and cookies/auth headers
 });
 
-// Add auth token to requests
+// ✅ Automatically attach auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -15,10 +16,27 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// ✅ All services
 export const apiService = {
-  // Chat
+  // ✅ Auth
+  register: async (data: any) => {
+    const response = await api.post('/v1/user/register', data);
+    return response.data;
+  },
+
+  login: async (data: any) => {
+    const response = await api.post('/v1/user/login', data);
+    return response.data;
+  },
+
+  getProfile: async () => {
+    const response = await api.get('/v1/user/profile');
+    return response.data;
+  },
+
+  // ✅ Chat
   sendMessage: async (message: string, conversationHistory: any[] = []) => {
-    const response = await api.post('/chat', { message, conversationHistory });
+    const response = await api.post('/v1/chat', { message, conversationHistory });
     return response.data;
   },
 
@@ -27,7 +45,7 @@ export const apiService = {
     return response.data;
   },
 
-  // Mood
+  // ✅ Mood
   logMood: async (moodData: any) => {
     const response = await api.post('/v1/mood', moodData);
     return response.data;
@@ -48,7 +66,7 @@ export const apiService = {
     return response.data;
   },
 
-  // Exercises
+  // ✅ Exercises
   getExercises: async (category?: string, difficulty?: string, limit = 20, page = 1) => {
     const params = new URLSearchParams();
     if (category) params.append('category', category);
@@ -80,7 +98,7 @@ export const apiService = {
     return response.data;
   },
 
-  // Forum
+  // ✅ Forum
   getPosts: async (category?: string, sort = 'recent', limit = 20, page = 1) => {
     const params = new URLSearchParams();
     if (category && category !== 'all') params.append('category', category);
@@ -122,7 +140,7 @@ export const apiService = {
     return response.data;
   },
 
-  // Admin
+  // ✅ Admin
   getAdminStats: async () => {
     const response = await api.get('/v1/admin/stats');
     return response.data;

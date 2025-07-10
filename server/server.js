@@ -1,10 +1,11 @@
+// index.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
-import {Mistral} from '@mistralai/mistralai';
+import { Mistral } from '@mistralai/mistralai';
 import morgan from 'morgan';
 
 import connectDB from './utils/connectDB.js';
@@ -23,21 +24,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ Connect MongoDB
+// ✅ MongoDB
 connectDB();
 
-// ✅ Mistral client
+// ✅ Mistral API
 const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 
-// ✅ CORS whitelist
+// ✅ CORS Whitelist
 const allowedOrigins = [
   'http://localhost:5173',
-  "https://manosetu.vercel.app",
+  'https://manosetu.vercel.app'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // Allow Postman/cURL
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS policy violation: Origin not allowed'));
+  },
+  credentials: true,
+}));
+
+// ✅ Handle all OPTIONS preflight requests
+app.options('*', cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('CORS policy violation: Origin not allowed'));
   },
@@ -47,15 +58,15 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('combined'));
 
-// ✅ Serve frontend from dist
+// ✅ Static files (frontend)
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// ✅ Health Check
+// ✅ Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'ManoSetu backend is running' });
 });
 
-// ✅ Chat API with Mental Health Focus
+// ✅ Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
@@ -77,22 +88,9 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const messages = [
-      { 
-        role: 'system', 
-        content: `You are ManoSetu, a compassionate mental health support assistant and therapist. Your primary goal is to provide empathetic, evidence-based mental health support, therapeutic guidance, and wellness advice. You should:
-
-        1. Listen actively and validate emotions
-        2. Provide evidence-based therapeutic techniques (CBT, mindfulness, etc.)
-        3. Offer coping strategies for stress, anxiety, and depression
-        4. Encourage professional help when needed
-        5. Never diagnose or replace professional therapy
-        6. Be warm, supportive, and non-judgmental
-        7. Focus on mental wellness, self-care, and emotional regulation
-        8. Provide practical exercises and techniques
-        9. Maintain confidentiality and create a safe space
-        10. Always prioritize user safety and well-being
-
-        Remember: If someone mentions self-harm or suicide, immediately encourage them to seek professional help and provide crisis resources.`
+      {
+        role: 'system',
+        content: `You are ManoSetu, a compassionate mental health support assistant...`,
       },
       ...conversationHistory,
       { role: 'user', content: message },
@@ -108,7 +106,6 @@ app.post('/api/chat', async (req, res) => {
     const reply = chatResponse.choices[0]?.message?.content;
     if (!reply) throw new Error('Empty response from model');
 
-    // Store chat in database if user is authenticated
     if (userId) {
       const { default: Chat } = await import('./models/chat.model.js');
       await Chat.create({ userId, role: 'user', content: message });
@@ -135,12 +132,11 @@ app.use('/api/v1/exercise', exerciseRoutes);
 app.use('/api/v1/forum', forumRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
-// ✅ Frontend Fallback Route
+// ✅ Fallback route (for SPA frontend)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-// ✅ Start Server
 app.listen(PORT, () => {
   console.log(`🚀 ManoSetu backend running on port ${PORT}`);
 });
