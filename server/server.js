@@ -33,27 +33,29 @@ const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 // ✅ CORS Whitelist
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://manosetu.vercel.app'
+  'https://manosetu.vercel.app',
+  'https://mano-setu-api.vercel.app',
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy violation: Origin not allowed'));
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation: Origin not allowed'));
+    }
   },
   credentials: true,
-}));
+};
 
-// ✅ Handle all OPTIONS preflight requests
-app.options('*', cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy violation: Origin not allowed'));
-  },
-  credentials: true,
-}));
+// ✅ Apply CORS globally
+app.use(cors(corsOptions));
+
+// ✅ Handle preflight requests for all routes
+app.options('*', cors(corsOptions));
+
+// ✅ Continue with other middlewares
+app.use(express.json());
 
 app.use(express.json());
 app.use(morgan('combined'));
