@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
 import { Heart, Clock, Star, Play, CheckCircle, Filter, Search, BookOpen, Brain, Wind, Bot as Lotus, PenTool, Activity } from 'lucide-react';
-import { apiService } from '../services/api';
+import apiService from '../services/api';
 import toast from 'react-hot-toast';
 
 const categoryIcons = {

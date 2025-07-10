@@ -14,7 +14,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { authService } from '../services/auth';
-import { apiService } from '../services/api';
+import apiService from '../services/api';
 import toast from 'react-hot-toast';
 
 export const ProfilePage: React.FC = () => {

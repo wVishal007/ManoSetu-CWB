@@ -32,7 +32,6 @@ const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 // ✅ CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://manosetu.vercel.app',
   'https://mano-setu-api.vercel.app',
 ];
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
 import { Send, Bot, User, Trash2, Loader2 } from 'lucide-react';
-import { apiService } from '../services/api';
+import apiService  from '../services/api';
 import toast from 'react-hot-toast';
 
 interface Message {
