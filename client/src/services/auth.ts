@@ -17,22 +17,22 @@ api.interceptors.request.use((config) => {
 
 export const authService = {
   login: async (email: string, password: string) => {
-    const response = await api.post('/user/login', { email, password });
+    const response = await api.post('/api/v1/user/login', { email, password });
     return response.data;
   },
 
   register: async (name: string, email: string, password: string) => {
-    const response = await api.post('/user/register', { name, email, password });
+    const response = await api.post('/api/v1/user/register', { name, email, password });
     return response.data;
   },
 
   getCurrentUser: async () => {
-    const response = await api.get('/user/me');
+    const response = await api.get('/api/v1/user/me');
     return response.data.user;
   },
 
   updateProfile: async (profileData: any) => {
-    const response = await api.put('/user/profile', profileData);
+    const response = await api.put('/api/v1/user/profile', profileData);
     return response.data;
   },
 };
