@@ -9,12 +9,17 @@ const router = express.Router();
 // ✅ Initialize Mistral client
 const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 
-// ✅ AI Chat Endpoint
+// ✅ AI Chat Endpoint (supports logged-in & guest users)
 router.post('/', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
-    let userId = null;
 
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ success: false, error: 'Message is required' });
+    }
+
+    // Attempt to decode token if present
+    let userId = null;
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith('Bearer ')) {
       try {
@@ -26,19 +31,17 @@ router.post('/', async (req, res) => {
       }
     }
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ success: false, error: 'Message is required' });
-    }
-
+    // Prepare messages for AI
     const messages = [
       {
         role: 'system',
-        content: `You are ManoSetu, a compassionate mental health support assistant...`,
+        content: `You are ManoSetu, a compassionate mental health support assistant. Always respond empathetically, help the user feel understood, and provide practical advice where relevant.`,
       },
       ...conversationHistory,
       { role: 'user', content: message },
     ];
 
+    // Call Mistral API
     const chatResponse = await client.chat.complete({
       model: 'mistral-small',
       messages,
@@ -49,7 +52,7 @@ router.post('/', async (req, res) => {
     const reply = chatResponse.choices[0]?.message?.content;
     if (!reply) throw new Error('Empty response from model');
 
-    // Save to DB if user is logged in
+    // Save chat only for authenticated users
     if (userId) {
       await Chat.create({ userId, role: 'user', content: message });
       await Chat.create({ userId, role: 'assistant', content: reply });
@@ -60,9 +63,8 @@ router.post('/', async (req, res) => {
       response: reply,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('Chat API Error:', error.message);
+    console.error('Chat API Error:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -82,14 +84,13 @@ router.get('/history', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      chats: chats.reverse(),
+      chats: chats.reverse(), // oldest first
       pagination: {
         current: parseInt(page),
         total: Math.ceil(totalChats / limit),
-        hasMore: skip + chats.length < totalChats
-      }
+        hasMore: skip + chats.length < totalChats,
+      },
     });
-
   } catch (error) {
     console.error('Chat history error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -100,12 +101,7 @@ router.get('/history', authenticateToken, async (req, res) => {
 router.delete('/history', authenticateToken, async (req, res) => {
   try {
     await Chat.deleteMany({ userId: req.user._id });
-
-    res.json({
-      success: true,
-      message: 'Chat history deleted successfully'
-    });
-
+    res.json({ success: true, message: 'Chat history deleted successfully' });
   } catch (error) {
     console.error('Delete chat history error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

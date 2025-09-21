@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { Mistral } from '@mistralai/mistralai';
 import morgan from 'morgan';
@@ -14,11 +12,9 @@ import moodRoutes from './routes/mood.route.js';
 import exerciseRoutes from './routes/exercise.route.js';
 import forumRoutes from './routes/forum.route.js';
 import adminRoutes from './routes/admin.route.js';
+import sessionRoutes from './routes/session.route.js';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,7 +22,7 @@ const PORT = process.env.PORT || 3001;
 // ✅ Connect to MongoDB
 connectDB();
 
-// ✅ Mistral API
+// ✅ Mistral API client
 const client = new Mistral({ apiKey: process.env.MIST_API_KEY });
 
 // ✅ CORS configuration
@@ -35,38 +31,27 @@ const allowedOrigins = [
   'https://mano-setu-api.vercel.app',
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (
-      !origin || // allow Postman, curl, etc.
-      allowedOrigins.includes(origin) ||
-      /\.vercel\.app$/.test(origin) // ✅ allow any *.vercel.app preview
-    ) {
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS policy violation: Origin not allowed'));
     }
   },
   credentials: true,
-};
-
-// ✅ Apply CORS globally and for preflight
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+}));
 
 // ✅ Middleware
 app.use(express.json());
 app.use(morgan('combined'));
 
-// ✅ Serve static frontend (Vite dist folder)
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// ✅ Health Check Route
+// ✅ Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'ManoSetu backend is running' });
 });
 
-// ✅ Chat Endpoint (Mental Health Assistant)
+// ✅ Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
@@ -88,10 +73,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const messages = [
-      {
-        role: 'system',
-        content: `You are ManoSetu, a compassionate mental health support assistant...`,
-      },
+      { role: 'system', content: `You are ManoSetu, a compassionate mental health assistant.` },
       ...conversationHistory,
       { role: 'user', content: message },
     ];
@@ -106,18 +88,14 @@ app.post('/api/chat', async (req, res) => {
     const reply = chatResponse.choices[0]?.message?.content;
     if (!reply) throw new Error('Empty response from model');
 
-    // Save chat to DB if user is logged in
+    // Save chat if user logged in
     if (userId) {
       const { default: Chat } = await import('./models/chat.model.js');
       await Chat.create({ userId, role: 'user', content: message });
       await Chat.create({ userId, role: 'assistant', content: reply });
     }
 
-    res.json({
-      success: true,
-      response: reply,
-      timestamp: new Date().toISOString(),
-    });
+    res.json({ success: true, response: reply, timestamp: new Date().toISOString() });
 
   } catch (error) {
     console.error('Chat API Error:', error.message);
@@ -132,11 +110,7 @@ app.use('/api/v1/mood', moodRoutes);
 app.use('/api/v1/exercise', exerciseRoutes);
 app.use('/api/v1/forum', forumRoutes);
 app.use('/api/v1/admin', adminRoutes);
-
-// ✅ Fallback for SPA (send index.html)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
+app.use('/api/v1/session', sessionRoutes);
 
 // ✅ Start server
 app.listen(PORT, () => {

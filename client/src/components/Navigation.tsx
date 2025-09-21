@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Heart, 
-  MessageCircle, 
-  Smile, 
-  Activity, 
-  Users, 
-  Settings, 
-  LogOut, 
-  Menu, 
+import {
+  Heart,
+  MessageCircle,
+  Smile,
+  Users,
+  Settings,
+  LogOut,
+  Menu,
   X,
-  Shield
+  Shield,
+  Stethoscope,
+  LayoutDashboard,
+  Video,
+  ChevronDown,
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -19,144 +22,204 @@ export const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMoreDropdownOpen, setIsMoreDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  const navigationItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Activity },
+  // Main navigation items for desktop
+  const mainNavigationItems = [
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/mood', label: 'Mood Tracker', icon: Smile },
     { path: '/chat', label: 'Chat', icon: MessageCircle },
     { path: '/exercises', label: 'Exercises', icon: Heart },
     { path: '/forum', label: 'Community', icon: Users },
   ];
 
-  if (user?.isAdmin) {
-    navigationItems.push({ path: '/admin', label: 'Admin', icon: Shield });
-  }
+  // Items for the 'More' dropdown
+  const moreNavigationItems = [
+    user?.isTherapist && { path: '/my-sessions', label: 'My Sessions', icon: Video },
+    !user?.isTherapist && { path: '/therapists', label: 'Find a Therapist', icon: Stethoscope },
+    !user?.isTherapist && { path: '/my-sessions', label: 'My Sessions', icon: Video },
+    { path: '/profile', label: 'Profile', icon: Settings },
+  ].filter(Boolean); // Filter out any false/undefined values
+
+  // Admin link is always top-level for visibility
+  const adminLink = user?.isAdmin ? { path: '/admin', label: 'Admin Panel', icon: Shield } : null;
+
+  const isLinkActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg border-b border-mint-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center space-x-2">
-              <div className="bg-gradient-to-r from-mint-600 to-sky-600 p-2 rounded-lg">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">ManoSetu</span>
-            </Link>
-          </div>
+    <nav className="bg-white dark:bg-zinc-950 text-sm shadow-sm border-b border-zinc-200 dark:border-zinc-800 font-sans">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
+          <Link to="/dashboard" className="flex items-center space-x-2 flex-shrink-0">
+            <div className="bg-gradient-to-tr from-blue-500 to-teal-400 p-2 rounded-xl transform transition-transform hover:scale-105">
+              <Heart className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hidden sm:block">
+              ManoSetu
+            </span>
+          </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            {navigationItems.map(({ path, label, icon: Icon }) => (
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-3">
+            {mainNavigationItems.map(({ path, label, icon: Icon }) => (
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === path
-                    ? 'bg-mint-100 text-mint-700'
-                    : 'text-gray-600 hover:text-mint-600 hover:bg-mint-50'
-                }`}
+                className={`flex items-center px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+                  ${isLinkActive(path)
+                    ? 'bg-blue-50 dark:bg-zinc-800 text-blue-600 dark:text-blue-300 shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
               >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
+                <Icon className="h-5 w-5 mr-2" />
+                {label}
               </Link>
             ))}
-          </div>
+            
+            {/* Admin Panel Link */}
+            {adminLink && (
+              <Link
+                key={adminLink.path}
+                to={adminLink.path}
+                className={`flex items-center px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+                  ${isLinkActive(adminLink.path)
+                    ? 'bg-blue-50 dark:bg-zinc-800 text-blue-600 dark:text-blue-300 shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+              >
+                <adminLink.icon className="h-5 w-5 mr-2" />
+                {adminLink.label}
+              </Link>
+            )}
 
-          {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-mint-400 to-sky-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium text-sm">
-                  {user?.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm text-gray-700">Hi, {user?.name}</span>
+            {/* More Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMoreDropdownOpen(!isMoreDropdownOpen)}
+                className="flex items-center px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+                  text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                More
+                <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${isMoreDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isMoreDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-xl py-2 border border-zinc-200 dark:border-zinc-700 z-50">
+                  {moreNavigationItems.map(({ path, label, icon: Icon }) => (
+                    <Link
+                      key={path}
+                      to={path}
+                      onClick={() => setIsMoreDropdownOpen(false)}
+                      className="flex items-center px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center px-4 py-2 text-sm text-red-500 w-full text-left hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
-            <Link
-              to="/profile"
-              className="p-2 text-gray-600 hover:text-mint-600 rounded-lg hover:bg-mint-50 transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+          </div>
+          
+          {/* Desktop User Profile - Simplified */}
+          <div className="hidden md:flex items-center">
+            <div className="w-10 h-10 bg-gradient-to-tr from-blue-500 to-teal-400 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-semibold text-lg">
+                {user?.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-mint-600 rounded-lg hover:bg-mint-50 transition-colors"
+              className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-md transition-colors duration-300"
+              aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-7 w-7 transition-transform duration-300 rotate-90" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-7 w-7 transition-transform duration-300" />
               )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-mint-100">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {navigationItems.map(({ path, label, icon: Icon }) => (
+        <div className="md:hidden bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 animate-fade-in-down">
+          <div className="px-2 py-4 space-y-2">
+            {mainNavigationItems.map(({ path, label, icon: Icon }) => (
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-base font-medium transition-colors ${
-                  location.pathname === path
-                    ? 'bg-mint-100 text-mint-700'
-                    : 'text-gray-600 hover:text-mint-600 hover:bg-mint-50'
-                }`}
                 onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-300
+                  ${isLinkActive(path)
+                    ? 'bg-blue-50 dark:bg-zinc-800 text-blue-600 dark:text-blue-300'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-6 w-6" />
                 <span>{label}</span>
               </Link>
             ))}
-          </div>
-          <div className="border-t border-mint-100 pt-4 pb-3">
-            <div className="flex items-center px-5">
-              <div className="w-10 h-10 bg-gradient-to-r from-mint-400 to-sky-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">
-                  {user?.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">{user?.name}</div>
-                <div className="text-sm text-gray-500">{user?.email}</div>
-              </div>
-            </div>
-            <div className="mt-3 space-y-1">
+            
+            {/* Admin Link for Mobile */}
+            {adminLink && (
               <Link
-                to="/profile"
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-base font-medium text-gray-600 hover:text-mint-600 hover:bg-mint-50"
+                key={adminLink.path}
+                to={adminLink.path}
                 onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-300
+                  ${isLinkActive(adminLink.path)
+                    ? 'bg-blue-50 dark:bg-zinc-800 text-blue-600 dark:text-blue-300'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
               >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
+                <adminLink.icon className="h-6 w-6" />
+                <span>{adminLink.label}</span>
               </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-base font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 w-full text-left"
+            )}
+
+            {/* More Items for Mobile */}
+            {moreNavigationItems.map(({ path, label, icon: Icon }) => (
+              <Link
+                key={path}
+                to={path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
-                <LogOut className="h-5 w-5" />
-                <span>Sign out</span>
-              </button>
-            </div>
+                <Icon className="h-6 w-6" />
+                <span>{label}</span>
+              </Link>
+            ))}
+
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950 w-full text-left transition-colors"
+            >
+              <LogOut className="h-6 w-6" />
+              <span>Sign out</span>
+            </button>
           </div>
         </div>
       )}

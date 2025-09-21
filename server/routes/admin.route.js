@@ -211,4 +211,37 @@ router.get('/users', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
+
+// Get all pending therapist applications
+router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const applications = await User.find({ role: 'therapist' , 'profile.isVerified': false });
+    res.json({ success: true, applications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Moderate therapist application
+router.put('/applications/:id/moderate', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body;
+
+    if (action === 'approve') {
+      await User.findByIdAndUpdate(id, { $set: { 'profile.isVerified': true, role: 'therapist' } });
+      res.json({ success: true, message: 'Application approved' });
+    } else if (action === 'reject') {
+      await User.findByIdAndUpdate(id, { $set: { role: 'user' }, $unset: { 'profile.bio': '', 'profile.specialties': '', 'profile.licenseNumber': '' } });
+      res.json({ success: true, message: 'Application rejected' });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 export default router;

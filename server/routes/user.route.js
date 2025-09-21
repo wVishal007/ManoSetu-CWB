@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import User from '../models/user.model.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -130,11 +131,12 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { name, profile } = req.body;
+    const { name, profile, role } = req.body;
     const updates = {};
 
     if (name) updates.name = name;
-    if (profile) updates.profile = { ...req.user.profile, ...profile };
+    if (profile) updates.profile = { ...(req.user.profile || {}), ...profile }; // ← safeguard
+    if (role) updates.role = role; // ← update role if sent
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
 
@@ -145,13 +147,80 @@ router.put('/profile', authenticateToken, [
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         profile: user.profile,
       }
     });
 
   } catch (error) {
+    console.error('PUT /profile error:', error); // ← log the actual error
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+
+
+router.post('/applications/therapists/:id', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'approve' or 'reject'
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (action === 'approve') {
+      user.role = 'therapist'; // Change role to therapist
+      user.applicationStatus = 'approved'; // Set status to approved
+      user.isTherapist = true; // Set isTherapist flag to true
+      await user.save();
+      res.json({ success: true, message: 'Therapist application approved successfully' });
+    } else if (action === 'reject') {
+      user.applicationStatus = 'rejected'; // Set status to rejected
+      user.profile.bio = undefined;
+      user.profile.specialties = undefined;
+      user.profile.licenseNumber = undefined;
+      await user.save();
+      res.json({ success: true, message: 'Therapist application rejected' });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+  } catch (error) {
+    console.error('Approve therapist error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/applications/therapists', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const applications = await User.find({ applicationStatus: 'pending' }).select('-password');
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('Get therapist applications error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// GET /api/v1/user?role=therapist&isVerified=true
+router.get('/', async (req, res) => {
+  try {
+    const { role, isVerified } = req.query;
+    const filter = {};
+
+    if (role) filter.role = role;                 // ← top-level role
+    if (isVerified !== undefined) filter['profile.isVerified'] = isVerified === 'true'; // nested
+
+    const users = await User.find(filter).select('-password');
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 
 export default router;
