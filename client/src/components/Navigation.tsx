@@ -61,7 +61,7 @@ export const Navigation: React.FC = () => {
               <Heart className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hidden sm:block">
-              ManoSetu
+              Mantrana
             </span>
           </Link>
 

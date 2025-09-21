@@ -48,7 +48,7 @@ app.use(morgan('combined'));
 
 // ✅ Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'ManoSetu backend is running' });
+  res.json({ status: 'OK', message: 'mantrana backend is running' });
 });
 
 // ✅ Chat Endpoint
@@ -73,7 +73,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const messages = [
-      { role: 'system', content: `You are ManoSetu, a compassionate mental health assistant.` },
+      { role: 'system', content: `You are , a compassionate mental health assistant.` },
       ...conversationHistory,
       { role: 'user', content: message },
     ];
@@ -114,5 +114,5 @@ app.use('/api/v1/session', sessionRoutes);
 
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log(`🚀 ManoSetu backend running on port ${PORT}`);
+  console.log(`🚀 mantrana backend running on port ${PORT}`);
 });

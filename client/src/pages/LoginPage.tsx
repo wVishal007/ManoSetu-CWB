@@ -128,7 +128,7 @@ export const LoginPage: React.FC = () => {
           <div className="bg-mint-50 border border-mint-200 rounded-lg p-4">
             <h3 className="text-sm font-medium text-mint-800 mb-2">Demo Account</h3>
             <p className="text-sm text-mint-700">
-              Email: demo@manosetu.com<br />
+              Email: demo@mantrana.com<br />
               Password: demo123
             </p>
           </div>

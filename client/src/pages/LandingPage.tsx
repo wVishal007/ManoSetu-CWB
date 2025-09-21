@@ -49,7 +49,7 @@ export const LandingPage: React.FC = () => {
       name: 'Sarah M.',
       role: 'User',
       content:
-        'ManoSetu helped me understand my emotions better. The daily mood tracking is incredibly insightful.',
+        'Mantrana helped me understand my emotions better. The daily mood tracking is incredibly insightful.',
       rating: 5,
     },
     {
@@ -242,7 +242,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
         <div className="text-center mt-12 text-sm text-gray-500">
-          &copy; 2024 ManoSetu. All rights reserved.
+          &copy; 2024 Mantrana. All rights reserved.
         </div>
       </footer>
     </div>

@@ -1,8 +1,8 @@
 {
-  "name": "manosetu-server",
+  "name": "mantrana-server",
   "version": "1.0.0",
   "type": "module",
-  "description": "ManoSetu Mental Health Platform Backend",
+  "description": "mantrana Mental Health Platform Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

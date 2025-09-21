@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
     const messages = [
       {
         role: 'system',
-        content: `You are ManoSetu, a compassionate mental health support assistant. Always respond empathetically, help the user feel understood, and provide practical advice where relevant.`,
+        content: `You are , a compassionate mental health support assistant. Always respond empathetically, help the user feel understood, and provide practical advice where relevant.`,
       },
       ...conversationHistory,
       { role: 'user', content: message },
