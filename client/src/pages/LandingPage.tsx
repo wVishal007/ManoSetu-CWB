@@ -77,7 +77,7 @@ export const LandingPage: React.FC = () => {
             <div className="p-2 bg-gradient-to-r from-mint-600 to-sky-600 rounded-lg">
               <Heart className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold">ManoSetu</span>
+            <span className="text-xl font-bold">Mantrana</span>
           </div>
           <div className="flex items-center gap-4">
             <Link
@@ -152,7 +152,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-6">Loved by Our Users</h2>
           <p className="text-center text-gray-600 mb-12 max-w-xl mx-auto">
-            Hear from people who found balance and healing with ManoSetu.
+            Hear from people who found balance and healing with Mantrana.
           </p>
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((t, i) => (
@@ -207,7 +207,7 @@ export const LandingPage: React.FC = () => {
               <div className="p-2 bg-gradient-to-r from-mint-600 to-sky-600 rounded-lg">
                 <Heart className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">ManoSetu</span>
+              <span className="text-xl font-bold text-white">Mantrana</span>
             </div>
             <p>
               A complete mental wellness platform powered by AI and compassion.

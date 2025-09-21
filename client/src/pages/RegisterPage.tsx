@@ -50,7 +50,7 @@ export const RegisterPage: React.FC = () => {
               <Heart className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Join ManoSetu</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Join Mantrana</h2>
           <p className="mt-2 text-gray-600">Start your mental wellness journey today</p>
         </div>
 

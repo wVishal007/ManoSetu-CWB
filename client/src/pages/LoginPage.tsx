@@ -43,7 +43,7 @@ export const LoginPage: React.FC = () => {
               <Heart className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome back to ManoSetu</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome back to Mantrana</h2>
           <p className="mt-2 text-gray-600">Sign in to continue your wellness journey</p>
         </div>
 

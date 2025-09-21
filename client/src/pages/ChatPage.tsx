@@ -119,7 +119,7 @@ export const ChatPage: React.FC = () => {
                 <Bot className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">ManoSetu AI Therapist</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Mantrana AI Therapist</h1>
                 <p className="text-sm text-gray-600">Your compassionate mental health companion</p>
               </div>
             </div>
@@ -139,7 +139,7 @@ export const ChatPage: React.FC = () => {
                 <div className="bg-gradient-to-r from-mint-600 to-sky-600 p-4 rounded-full w-16 h-16 mx-auto mb-4">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to ManoSetu AI</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Mantrana AI</h3>
                 <p className="text-gray-600 mb-4">
                   I'm here to provide compassionate mental health support and guidance. 
                   How are you feeling today?
@@ -215,7 +215,7 @@ export const ChatPage: React.FC = () => {
                   <div className="bg-gray-100 rounded-lg p-4">
                     <div className="flex items-center space-x-2">
                       <Loader2 className="h-4 w-4 animate-spin text-mint-600" />
-                      <span className="text-gray-600">ManoSetu is thinking...</span>
+                      <span className="text-gray-600">Mantrana is thinking...</span>
                     </div>
                   </div>
                 </div>

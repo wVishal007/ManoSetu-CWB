@@ -72,11 +72,20 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Message is required' });
     }
 
-    const messages = [
-      { role: 'system', content: `You are , a compassionate mental health assistant.` },
-      ...conversationHistory,
-      { role: 'user', content: message },
-    ];
+const messages = [
+  {
+    role: 'system',
+    content: `
+      You are a compassionate and professional mental health therapist. 
+      Always respond empathetically, listen actively, validate feelings, 
+      and provide practical coping strategies. 
+      Never give code, technical instructions, or irrelevant answers. 
+      Your responses should always feel like a caring therapist.
+    `,
+  },
+  ...conversationHistory,
+  { role: 'user', content: message },
+];
 
     const chatResponse = await client.chat.complete({
       model: 'mistral-small',
