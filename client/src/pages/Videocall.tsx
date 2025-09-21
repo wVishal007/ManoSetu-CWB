@@ -10,57 +10,67 @@ const VideoCall = ({ sessionId }: { sessionId: string }) => {
   const [remoteUsers, setRemoteUsers] = useState<any[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let isMounted = true;
+useEffect(() => {
+  let isMounted = true;
 
-    const init = async () => {
-      try {
-        const { token, channelName, uid } = await apiService.getVideoToken(sessionId);
+  const init = async () => {
+    try {
+      const { token, channelName, uid } = await apiService.getVideoToken(sessionId);
 
-        const key = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/session/key`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+      const key = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/session/key`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
-        await client.join(key.data.key, channelName, token, uid);
+      await client.join(key.data.key, channelName, token, uid);
 
-        const [microphoneTrack, cameraTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-        setLocalTracks([microphoneTrack, cameraTrack]);
+      const [micTrack, camTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+      setLocalTracks([micTrack, camTrack]);
+      camTrack.play("local-player");
+      await client.publish([micTrack, camTrack]);
 
-        cameraTrack.play("local-player");
-        await client.publish([microphoneTrack, cameraTrack]);
-
-        client.on("user-published", async (user, mediaType) => {
-          await client.subscribe(user, mediaType);
-          if (!isMounted) return;
-
-          if (mediaType === "video") user.videoTrack.play("remote-player");
-          if (mediaType === "audio") user.audioTrack.play();
-
+      // --- Subscribe to all existing remote users (important for late joiners) ---
+      client.remoteUsers.forEach((user) => {
+        if (user.uid !== uid) {
+          if (user.videoTrack) user.videoTrack.play("remote-player");
+          if (user.audioTrack) user.audioTrack.play();
           setRemoteUsers((prev) => [...prev.filter(u => u.uid !== user.uid), user]);
-        });
+        }
+      });
 
-        client.on("user-unpublished", (user) => {
-          setRemoteUsers((prev) => prev.filter(u => u.uid !== user.uid));
-        });
+      // Listen for future users
+      client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        if (!isMounted) return;
 
-        client.on("token-privilege-will-expire", async () => {
-          const { token: newToken } = await apiService.getVideoToken(sessionId);
-          await client.renewToken(newToken);
-        });
-      } catch (error) {
-        console.error("Video call init error:", error);
-      }
-    };
+        if (mediaType === "video") user.videoTrack.play("remote-player");
+        if (mediaType === "audio") user.audioTrack.play();
 
-    init();
+        setRemoteUsers((prev) => [...prev.filter(u => u.uid !== user.uid), user]);
+      });
 
-    return () => {
-      isMounted = false;
-      localTracks.forEach((track) => track.close());
-      client.leave();
-      client.removeAllListeners();
-    };
-  }, [sessionId]);
+      client.on("user-unpublished", (user) => {
+        setRemoteUsers((prev) => prev.filter(u => u.uid !== user.uid));
+      });
+
+      client.on("token-privilege-will-expire", async () => {
+        const { token: newToken } = await apiService.getVideoToken(sessionId);
+        await client.renewToken(newToken);
+      });
+    } catch (error) {
+      console.error("Video call init error:", error);
+    }
+  };
+
+  init();
+
+  return () => {
+    isMounted = false;
+    localTracks.forEach((track) => track.close());
+    client.leave();
+    client.removeAllListeners();
+  };
+}, [sessionId]);
+
 
   // Hangup function
   const hangUp = async () => {
